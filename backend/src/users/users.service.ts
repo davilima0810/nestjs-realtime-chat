@@ -19,7 +19,23 @@ export class UsersService {
     return user.save();
   }
 
-  async setOnline(userId: string, online: boolean): Promise<void> {
-    await this.userModel.updateOne({ _id: userId }, { online }).exec();
+  // async setOnline(userId: string, online: boolean): Promise<void> {
+  //   await this.userModel.updateOne({ _id: userId }, { online }).exec();
+  // }
+
+  async setOnline(userId: string) {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { online: true },
+      { new: true },
+    );
+  }
+
+  async setOffline(userId: string) {
+    return this.userModel.findByIdAndUpdate(
+      userId,
+      { online: false },
+      { new: true },
+    );
   }
 }

@@ -7,8 +7,8 @@ import {
 } from '@nestjs/websockets';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
-import { JwtPayload } from '../auth/types/jwt-payload';
 import { MessagesService } from 'src/messages/messages.service';
+import { UsersService } from 'src/users/users.service';
 
 @WebSocketGateway({
   cors: { origin: '*' },
@@ -20,38 +20,36 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(
     private readonly jwtService: JwtService,
     private readonly messagesService: MessagesService,
+    private readonly usersService: UsersService,
   ) {}
 
-  handleConnection(client: Socket) {
-    try {
-      const token =
-        client.handshake.auth?.token ||
-        client.handshake.headers?.authorization?.split(' ')[1];
+  async handleConnection(client: Socket) {
+    const token = client.handshake.auth?.token;
+    const payload = this.jwtService.verify(token);
 
-      if (!token) {
-        client.disconnect();
-        return;
-      }
+    client.data.user = payload;
+    client.join(payload.sub);
 
-      const payload = this.jwtService.verify<JwtPayload>(token);
+    await this.usersService.setOnline(payload.sub);
 
-      client.data.user = {
-        userId: payload.sub,
-        username: payload.username,
-      };
-
-      client.join(payload.sub);
-
-      console.log('User connected:', client.data.user);
-    } catch (error) {
-      console.log('JWT error:', error?.message);
-      client.disconnect();
-    }
+    this.server.emit('user_online', {
+      userId: payload.sub,
+      username: payload.username,
+    });
   }
 
-  handleDisconnect(client: Socket) {
-    console.log('User disconnected:', client.data.user);
+  async handleDisconnect(client: Socket) {
+    const user = client.data.user;
+    if (!user) return;
+
+    await this.usersService.setOffline(user.sub);
+
+    this.server.emit('user_offline', {
+      userId: user.sub,
+      username: user.username,
+    });
   }
+
 
   @SubscribeMessage('send_message')
   async handleMessage(

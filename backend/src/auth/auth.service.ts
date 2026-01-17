@@ -47,7 +47,7 @@ export class AuthService {
       name: string;
     };
   }> {
-    await this.usersService.setOnline(user._id.toString(), true);
+    await this.usersService.setOnline(user._id.toString());
 
     const payload = {
       sub: user._id.toString(),
