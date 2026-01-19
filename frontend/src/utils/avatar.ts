@@ -1,5 +1,14 @@
+function hashSeed(seed: string) {
+  let hash = 0;
+  for (let i = 0; i < seed.length; i++) {
+    hash = seed.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return Math.abs(hash);
+}
+
 export function getAvatarUrl(seed: string) {
-  return `https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(
-    seed,
-  )}`;
+  const index = hashSeed(seed) % 100;
+  const gender = hashSeed(seed) % 2 === 0 ? 'men' : 'women';
+
+  return `https://randomuser.me/api/portraits/${gender}/${index}.jpg`;
 }
