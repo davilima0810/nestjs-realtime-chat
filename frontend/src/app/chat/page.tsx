@@ -105,6 +105,22 @@ export default function ChatPage() {
     };
   }, [token, selectedUser]);
 
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') {
+        setSelectedUser(null);
+        setMessages([]); // opcional, mas recomendado
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
+
 
   return (
     <ChatLayout>
