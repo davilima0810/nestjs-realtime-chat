@@ -41,6 +41,22 @@ O projeto foi desenvolvido com foco em boas práticas, arquitetura organizada, c
 
 ## ⚙️ Como Executar o Projeto
 
+### 🔹 Configuração de Variáveis de Ambiente (Backend)
+
+Antes de subir o backend, é necessário criar um arquivo `.env` dentro da pasta `backend` com as seguintes variáveis:
+
+```env
+JWT_SECRET=supersecret
+MONGO_URI=mongodb://mongo:27017/chat
+````
+
+Essas variáveis são utilizadas para:
+
+* Assinatura e validação do JWT
+* Conexão com o banco de dados MongoDB
+
+---
+
 ### 🔹 Backend (com Docker)
 
 O backend possui suporte completo a Docker.
