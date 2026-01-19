@@ -7,3 +7,14 @@ export const api = axios.create({
 export function setAuthToken(token: string) {
   api.defaults.headers.common.Authorization = `Bearer ${token}`;
 }
+
+api.interceptors.response.use(
+  (res) => res,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.clear();
+      window.location.href = '/login';
+    }
+    return Promise.reject(error);
+  }
+);

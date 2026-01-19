@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { setAuthToken } from '@/services/api';
+import { useEffect, useState } from 'react';
+import { api, setAuthToken } from '@/services/api';
 import { AuthUser } from '@/types/auth-user';
 
 function getInitialAuth() {
@@ -28,14 +28,17 @@ function getInitialAuth() {
 }
 
 export function useAuth() {
-  const [{ token, user }, setAuth] = useState(getInitialAuth);
+  const [{ token, user, loading }, setAuth] = useState(() => ({
+    ...getInitialAuth(),
+    loading: true,
+  }));
 
   function login(token: string, user: AuthUser) {
     localStorage.setItem('token', token);
     localStorage.setItem('user', JSON.stringify(user));
 
     setAuthToken(token);
-    setAuth({ token, user });
+    setAuth({ token, user, loading: false });
   }
 
   function logout() {
@@ -43,12 +46,36 @@ export function useAuth() {
     localStorage.removeItem('user');
 
     setAuthToken('');
-    setAuth({ token: null, user: null });
+    setAuth({ token: null, user: null, loading: false });
   }
+
+  useEffect(() => {
+    async function validateToken() {
+      if (!token) {
+        setAuth((prev) => ({ ...prev, loading: false }));
+        return;
+      }
+
+      try {
+        const res = await api.get<AuthUser>('/auth/me');
+
+        setAuth({
+          token,
+          user: res.data,
+          loading: false,
+        });
+      } catch {
+        logout();
+      }
+    }
+
+    validateToken();
+  }, []);
 
   return {
     token,
     user,
+    loading,
     isAuthenticated: !!token,
     login,
     logout,
