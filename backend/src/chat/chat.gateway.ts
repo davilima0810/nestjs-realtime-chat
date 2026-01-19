@@ -4,6 +4,8 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
   SubscribeMessage,
+  ConnectedSocket,
+  MessageBody,
 } from '@nestjs/websockets';
 import { JwtService } from '@nestjs/jwt';
 import { Server, Socket } from 'socket.io';
@@ -24,47 +26,69 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   ) {}
 
   async handleConnection(client: Socket) {
-    const token = client.handshake.auth?.token;
-    const payload = this.jwtService.verify(token);
+    try {
+      const token = client.handshake.auth?.token;
+      if (!token) {
+        client.disconnect();
+        return;
+      }
 
-    client.data.user = payload;
-    client.join(payload.sub);
+      const payload = this.jwtService.verify(token);
 
-    await this.usersService.setOnline(payload.sub);
+      client.data.user = {
+        userId: payload.sub,
+        username: payload.username,
+      };
 
-    this.server.emit('user_online', {
-      userId: payload.sub,
-      username: payload.username,
-    });
+      client.join(payload.sub);
+
+      await this.usersService.setOnline(payload.sub);
+
+      this.server.emit('user_status', {
+        userId: payload.sub,
+        online: true,
+      });
+    } catch {
+      client.disconnect();
+    }
   }
 
   async handleDisconnect(client: Socket) {
     const user = client.data.user;
     if (!user) return;
 
-    await this.usersService.setOffline(user.sub);
+    await this.usersService.setOffline(user.userId);
 
-    this.server.emit('user_offline', {
-      userId: user.sub,
-      username: user.username,
+    this.server.emit('user_status', {
+      userId: user.userId,
+      online: false,
     });
   }
 
-
   @SubscribeMessage('send_message')
-  async handleMessage(
-    client: Socket,
-    payload: { to: string; message: string },
+  async handleSendMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { to: string; message: string },
   ) {
-    const from = client.data.user;
+    const user = client.data.user;
+    if (!user) return;
 
-    // 🔥 salva no banco
-    await this.messagesService.create(from.userId, payload.to, payload.message);
+    const savedMessage = await this.messagesService.create(user.userId, data.to, data.message);
 
-    // 🔥 envia APENAS para o destinatário
-    this.server.to(payload.to).emit('new_message', {
-      from,
-      message: payload.message,
+    const fromUser = await this.usersService.findById(user.userId);
+
+    if (!fromUser) {
+      return;
+    }
+
+    this.server.emit('new_message', {
+      from: {
+        userId: user.userId,
+        username: fromUser.username,
+      },
+      to: data.to,
+      content: data.message,
+      createdAt: savedMessage.createdAt, 
     });
   }
 }

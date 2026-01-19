@@ -14,6 +14,10 @@ export class UsersService {
     return this.userModel.findOne({ username }).exec();
   }
 
+  async findById(userId: string) {
+    return this.userModel.findById(userId).select('_id username').exec();
+  }
+
   async create(data: Partial<User>): Promise<User> {
     const user = new this.userModel(data);
     return user.save();
@@ -37,5 +41,12 @@ export class UsersService {
       { online: false },
       { new: true },
     );
+  }
+
+  async findAllExcept(userId: string) {
+    return this.userModel
+      .find({ _id: { $ne: userId } })
+      .select('_id name username online')
+      .exec();
   }
 }
