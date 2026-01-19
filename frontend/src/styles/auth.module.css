@@ -1,0 +1,67 @@
+.wrapper {
+  min-height: 100vh;
+  width: 100%;
+  background: #000; /* depois vira imagem */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card {
+  background: #fff;
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+  text-align: center;
+}
+
+.card h1 {
+  margin-bottom: 8px;
+  font-size: 24px;
+}
+
+.card p {
+  margin-bottom: 24px;
+  color: #666;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.content input {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+}
+
+.content button {
+  margin-top: 8px;
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  background: #000;
+  color: #fff;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.content button:hover {
+  opacity: 0.9;
+}
+
+.footer {
+  margin-top: 24px;
+  font-size: 14px;
+}
+
+.footer a {
+  color: #000;
+  font-weight: bold;
+  text-decoration: none;
+}
