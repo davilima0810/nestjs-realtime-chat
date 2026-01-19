@@ -30,8 +30,25 @@ export default function ChatPage() {
 
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [unread, setUnread] = useState<Record<string, number>>({});
 
   const [messages, setMessages] = useState<Message[]>([]);
+
+  async function loadMessages(userId: string) {
+    const res = await api.get<Message[]>(`/messages/${userId}`);
+    setMessages(res.data);
+  }
+
+  function handleSendMessage(text: string) {
+    if (!text || !selectedUser || !token) return;
+
+    const socket = connectSocket(token);
+
+    socket.emit('send_message', {
+      to: selectedUser._id,
+      message: text,
+    });
+  }
 
   useEffect(() => {
     if (!token) return;
@@ -56,7 +73,18 @@ export default function ChatPage() {
           msg.to === selectedUser._id)
       ) {
         setMessages((prev) => [...prev, msg]);
+        return;
       }
+
+      const otherUserId =
+        msg.from.userId === user?.id
+          ? msg.to
+          : msg.from.userId;
+
+      setUnread((prev) => ({
+        ...prev,
+        [otherUserId]: (prev[otherUserId] ?? 0) + 1,
+      }));
     });
 
     socket.on(
@@ -77,21 +105,6 @@ export default function ChatPage() {
     };
   }, [token, selectedUser]);
 
-  async function loadMessages(userId: string) {
-    const res = await api.get<Message[]>(`/messages/${userId}`);
-    setMessages(res.data);
-  }
-
-  function handleSendMessage(text: string) {
-    if (!text || !selectedUser || !token) return;
-
-    const socket = connectSocket(token);
-
-    socket.emit('send_message', {
-      to: selectedUser._id,
-      message: text,
-    });
-  }
 
   return (
     <ChatLayout>
@@ -101,13 +114,17 @@ export default function ChatPage() {
         <ChatSidebar
           users={users}
           selectedUser={selectedUser}
-          onSelect={(u) => {
-            setSelectedUser(u);
-            loadMessages(u._id);
+          unread={unread}
+          onSelect={(user) => {
+            setSelectedUser(user);
+            loadMessages(user._id);
+
+            setUnread((prev) => ({
+              ...prev,
+              [user._id]: 0,
+            }));
           }}
         />
-
-        
 
         <div className={styles.chatArea}>
            <ChatMessages
