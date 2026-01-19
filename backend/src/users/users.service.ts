@@ -15,7 +15,7 @@ export class UsersService {
   }
 
   async findById(userId: string) {
-    return this.userModel.findById(userId).select('_id username').exec();
+    return this.userModel.findById(userId).select('_id username name').exec();
   }
 
   async create(data: Partial<User>): Promise<User> {
