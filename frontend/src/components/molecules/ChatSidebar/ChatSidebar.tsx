@@ -1,5 +1,7 @@
 import { User } from '@/types/user';
 import styles from '@/styles/chat.module.css';
+import { getAvatarUrl } from '@/utils/avatar';
+import Image from 'next/image';
 
 interface Props {
   users: User[];
@@ -26,21 +28,37 @@ export function ChatSidebar({
               className={`
                 ${styles.contact}
                 ${selectedUser?._id === user._id ? styles.active : ''}
-                ${unread?.[user._id] > 0 ? styles.unread : ''}
+                ${unreadCount > 0 ? styles.unread : ''}
               `}
               onClick={() => onSelect(user)}
             >
+              {/* Lado esquerdo */}
+              <div className={styles.contactLeft}>
+                {/* Avatar + status */}
+                <div className={styles.avatarWrapper}>
+                  <Image
+                    src={getAvatarUrl(user.username)}
+                    alt={user.username}
+                    width={36}
+                    height={36}
+                    className={styles.avatar}
+                    unoptimized
+                  />
 
-              <div className={styles.contactInfo}>
-                <strong>{user.username}</strong>
+                  <span
+                    className={`${styles.statusDot} ${
+                      user.online ? styles.online : styles.offline
+                    }`}
+                  />
+                </div>
 
-                <span
-                  className={
-                    user.online ? styles.online : styles.offline
-                  }
-                >
-                  {user.online ? 'Online' : 'Offline'}
-                </span>
+                {/* Textos */}
+                <div className={styles.contactText}>
+                  <strong>{user.name}</strong>
+                  <span className={styles.usernameSmall}>
+                    @{user.username}
+                  </span>
+                </div>
               </div>
 
               {unreadCount > 0 && (

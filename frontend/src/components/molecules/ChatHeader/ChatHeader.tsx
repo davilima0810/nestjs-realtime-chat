@@ -3,6 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
 import { AuthUser } from '@/types/auth-user';
 import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import { getAvatarUrl } from '@/utils/avatar';
 
 
 interface Props {
@@ -32,9 +34,24 @@ export function ChatHeader({ user }: Props) {
       <h2 className={styles.title}>Mensagens</h2>
 
       <div className={styles.userInfo}>
-        <span className={styles.username}>
-          {user?.name}
-        </span>
+
+        <Image
+          src={getAvatarUrl(user?.username ?? 'user')}
+          alt={user?.username ?? 'user'}
+          width={40}
+          height={40}
+          className={styles.avatar}
+          unoptimized
+        />
+        
+        <div className={styles.userText}>
+          <span className={styles.name}>
+            {user?.name}
+          </span>
+          <span className={styles.usernameSmall}>
+            @{user?.username}
+          </span>
+        </div>
 
         <button
           className={styles.logoutButton}
